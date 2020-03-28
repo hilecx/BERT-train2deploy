@@ -1,0 +1,26 @@
+python run_mobile.py   --task_name=setiment   --do_train=true   --do_eval=true   --data_dir=dat   --vocab_file=chinese_L-12_H-768_A-12/vocab.txt   --bert_config_file=chinese_L-12_H-768_A-12/bert_config.json   --init_checkpoint=chinese_L-12_H-768_A-12/bert_model.ckpt   --max_seq_length=128   --train_batch_size=4   --learning_rate=2e-5   --num_train_epochs=5.0   --output_dir=output/mobile_0
+
+#训练 with gpu
+python run_mobile.py   --task_name=hscode   --do_train=true   --do_eval=true   --data_dir=dat_hscode   --vocab_file=chinese_L-12_H-768_A-12/vocab.txt   --bert_config_file=chinese_L-12_H-768_A-12/bert_config.json   --init_checkpoint=chinese_L-12_H-768_A-12/bert_model.ckpt   --max_seq_length=128   --train_batch_size=8   --learning_rate=2e-5   --num_train_epochs=5.0   --output_dir=output/hscode_0 
+
+
+#训练 with tpu。未验证
+python run_mobile.py   --task_name=hscode   --do_train=true   --do_eval=true   --data_dir=dat_hscode   --vocab_file=chinese_L-12_H-768_A-12/vocab.txt   --bert_config_file=chinese_L-12_H-768_A-12/bert_config.json   --init_checkpoint=chinese_L-12_H-768_A-12/bert_model.ckpt   --max_seq_length=128   --train_batch_size=32   --learning_rate=2e-5   --num_train_epochs=5.0   --output_dir=output/hscode_0 --use_tpu=true
+
+
+#ckpt转pb
+python freeze_graph.py     -bert_model_dir chinese_L-12_H-768_A-12     -model_dir output/hscode_0     -max_seq_len 128     -num_labels 11985
+
+#用pb文件启动http服务
+bert-base-serving-start     -model_dir output/hscode_0     -bert_model_dir chinese_L-12_H-768_A-12     -model_pb_dir output/hscode_0     -mode CLASS     -max_seq_len 128     -http_port 8091     -port 5575     -port_out 5576     -device_map 1 -prefetch_size=3
+
+#http服务测试
+curl -X POST http://127.0.0.1:8091/encode   -H 'content-type: application/json'   -d '{"id": 111,"texts": ["总的来说，这款手机性价比是特别高的。","槽糕的售后服务！！！店大欺客"], "is_tokenized": false}'
+
+!pip uninstall tensorflow-federated               
+!pip uninstall tensorflow-gcs-config              
+!pip uninstall tensorflow-hub                     
+!pip uninstall tensorflow-metadata                
+!pip uninstall tensorflow-model-optimization      
+!pip uninstall tensorflow-privacy                 
+!pip uninstall tensorflow-probability        

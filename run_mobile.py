@@ -341,6 +341,62 @@ class SetimentProcessor(DataProcessor):
     return examples
 #-----------------------------------------
 
+#-----------------------------------------
+#hscode分类数据处理 2019/3/12 
+#labels: from class.tsv
+class HscodeProcessor(DataProcessor):
+  def get_train_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(
+        self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+  def get_dev_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(
+        self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+  def get_test_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(
+        self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+
+  def get_labels(self):
+    """See base class."""
+
+    """
+    if not os.path.exists(os.path.join(FLAGS.output_dir, 'label_list.pkl')):
+        with codecs.open(os.path.join(FLAGS.output_dir, 'label_list.pkl'), 'wb') as fd:
+            pickle.dump(self.labels, fd)
+    """
+    label = [ x[0] for x in self._read_tsv(os.path.join(FLAGS.data_dir, "class.tsv"))]
+    # label = []
+    # for x in self._read_tsv(os.path.join(FLAGS.data_dir, "class.tsv")):
+    #     print(x[0])
+    print(label)
+    return label
+
+  def _create_examples(self, lines, set_type):
+    """Creates examples for the training and dev sets."""
+    examples = []
+    for (i, line) in enumerate(lines):
+      if i == 0: 
+        continue
+      guid = "%s-%s" % (set_type, i)
+
+      #debug (by xmxoxo)
+      print("read line: No.%d %s" % (i,line[0]))
+
+      text_a = tokenization.convert_to_unicode(line[1])
+      if set_type == "test":
+        label = "0"
+      else:
+        label = tokenization.convert_to_unicode(line[0])
+      examples.append(
+          InputExample(guid=guid, text_a=text_a, label=label))
+    return examples
+#-----------------------------------------
+
+
 class MrpcProcessor(DataProcessor):
   """Processor for the MRPC data set (GLUE version)."""
 
@@ -860,7 +916,8 @@ def main(_):
       "mnli": MnliProcessor,
       "mrpc": MrpcProcessor,
       "xnli": XnliProcessor,
-      "setiment": SetimentProcessor, #2019/3/27 add by Echo
+      # "setiment": SetimentProcessor, #2019/3/27 add by Echo
+      "hscode": HscodeProcessor,
   }
 
   tokenization.validate_case_matches_checkpoint(FLAGS.do_lower_case,
